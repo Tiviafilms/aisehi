@@ -1,0 +1,7 @@
+pyrogram
+TgCrypto
+pyrebase4
+requests
+better_profanity
+setuptools
+yt-dlp

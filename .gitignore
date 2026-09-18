@@ -1,0 +1,9 @@
+tests.py
+bot
+__pycache__
+*.session
+*.session-journal
+_Cred.py
+env
+mixdrop_cache.jsonvenv/ 
+venv/ 
