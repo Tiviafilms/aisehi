@@ -5,3 +5,4 @@ requests
 better_profanity
 setuptools
 yt-dlp
+linkvertise
