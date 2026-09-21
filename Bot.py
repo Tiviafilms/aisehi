@@ -47,7 +47,7 @@ async def handle_callback(app, query):
         try:
             # Extract movie name using Regex for robustness
             # Matches "Request: <movie_name>" anywhere in the text
-            match = re.search(r"Request:\s*(.*)", query.message.text)
+            match = re.search(r"Request:\s*(.*)", query.text)
             if match:
                 movie_name = match.group(1).strip()
                 msg = f"The movie you searched for **{movie_name}**, is uploaded to the bot. You can retry now."
@@ -102,13 +102,13 @@ async def start_command(app, message):
 @app.on_message(filters.channel)
 async def admin_cmds_aprooval(app, message):
     if message.chat.id in Config.ADMIN and str(message.chat.id)[0] == "-":
-        if f"{Config.CUSTOM_MSG_COMMAND}" in message.text:
+        if f"{Config.CUSTOM_MSG_COMMAND}" in text:
             await process.handle_custom_message(message)
 
 
 @app.on_message(filters.group)
 async def group_command(app, message):
-    if Config.ALWAYS_LISTEN_COMMAND in message.text:
+    if Config.ALWAYS_LISTEN_COMMAND in text:
         await process.handle_always_listen_command(message)
         return
 
@@ -119,16 +119,16 @@ async def group_command(app, message):
 
     if should_process and await process.dbh.check_user(message):
         user_id = message.from_user.id
-        text = str(message.text).replace(f"{Config.BOT_USERNAME}", "").strip()
+        text = str(text).replace(f"{Config.BOT_USERNAME}", "").strip()
         await log.log(user_id, f"User searched inside the group.\nSearched: {text}")
 
-        if "&" in message.text:
-            await process.multi_search_movie(message, message.text, 0, 0)
+        if "&" in text:
+            await process.multi_search_movie(message, text, 0, 0)
         else:
             await process.search_movie(message, text, 0)
     
     if message.chat.id in Config.ADMIN and str(message.chat.id)[0] == "-":
-        if f"{Config.CUSTOM_MSG_COMMAND}" in message.text:
+        if f"{Config.CUSTOM_MSG_COMMAND}" in text:
             await process.handle_custom_message(message)
 
         
@@ -161,7 +161,7 @@ async def cmd_parser(app, message):
 
         # 2. Upload Link Response
         # Check for upload response
-        if message.reply_to_message and "Please reply to this message with the direct download link" in message.reply_to_message.text:
+        if message.reply_to_message and "Please reply to this message with the direct download link" in message.reply_to_text:
              await process.handle_upload_response(message)
              return
 
@@ -169,51 +169,51 @@ async def cmd_parser(app, message):
 
         if (int(message.chat.id) in Config.ADMIN) and await process.dbh.check_user(message):
             # /broadcast
-            if message.reply_to_message and message.text == Config.BROADCAST_COMMAND:
+            if message.reply_to_message and text == Config.BROADCAST_COMMAND:
                 await process.send_promo_message(message)
             
-            elif message.text in Config.BROADCAST_COMMAND:
+            elif text in Config.BROADCAST_COMMAND:
                 await app.send_message(message.chat.id, f"Reply to any message with `{Config.BROADCAST_COMMAND}` and it will broadcast for all users.\n \n**If you need to broadcast a simple message, then just add `###` symbols (3 hashes) to any text message**")
             
-            elif Config.BROADCAST_SYMBOL in message.text:
+            elif Config.BROADCAST_SYMBOL in text:
                 await process.send_broadcast(message)
 
             # /block_user [user_id]
-            elif Config.BLOCK_USER_COMMAND in message.text:
+            elif Config.BLOCK_USER_COMMAND in text:
                 await process.handle_block(message)
 
             # /unblock_user [user_id]
-            elif Config.UNBLOCK_USER_COMMAND in message.text:
+            elif Config.UNBLOCK_USER_COMMAND in text:
                 await process.handle_unblock(message)
 
             # /run_time
-            elif Config.RUN_TIME in message.text:
+            elif Config.RUN_TIME in text:
                 await process.check_runtime(message)
 
             # /id
-            elif Config.GET_ID_COMMAND in message.text:
+            elif Config.GET_ID_COMMAND in text:
                 await process.get_id(message)
 
             # /safe_search
-            elif Config.SAFE_SEARCH_COMMAND in message.text:
+            elif Config.SAFE_SEARCH_COMMAND in text:
                 await process.handle_safe_search(message)
             
             # /user_123456
-            elif f"{Config.CUSTOM_MSG_COMMAND}" in message.text:
+            elif f"{Config.CUSTOM_MSG_COMMAND}" in text:
                 await process.handle_custom_message(message)
 
-            elif Config.TALK_TO_ADMIN_COMMAND in message.text:
+            elif Config.TALK_TO_ADMIN_COMMAND in text:
                 await app.send_message(message.chat.id, "Only working for users, Not for admins.")
             
-            elif message.text == "/upload":
+            elif text == "/upload":
                 await process.handle_upload_command(message)
 
             else:
 
-                if "&" in message.text:
-                    await process.multi_search_movie(message, message.text, 0, 0)
+                if "&" in text:
+                    await process.multi_search_movie(message, text, 0, 0)
                 else:
-                    await process.search_movie(message, message.text, 0)
+                    await process.search_movie(message, text, 0)
         
 
 
@@ -223,25 +223,25 @@ async def cmd_parser(app, message):
                 if await process.is_user_in_channel(message):
 
                     # /id
-                    if Config.GET_ID_COMMAND in message.text:
+                    if Config.GET_ID_COMMAND in text:
                         await process.get_id(message)
                         
                     # /safe_search
-                    elif Config.SAFE_SEARCH_COMMAND in message.text:
+                    elif Config.SAFE_SEARCH_COMMAND in text:
                         await process.handle_safe_search(message)
 
-                    elif Config.TALK_TO_ADMIN_COMMAND in message.text:
+                    elif Config.TALK_TO_ADMIN_COMMAND in text:
                         await process.talk_to_admin(message)
 
-                    elif message.text == "/upload":
+                    elif text == "/upload":
                         await process.handle_upload_command(message)
 
                     else:
 
-                        if "&" in message.text:
-                            await process.multi_search_movie(message, message.text, 0, 0)
+                        if "&" in text:
+                            await process.multi_search_movie(message, text, 0, 0)
                         else:
-                            await process.search_movie(message, message.text, 0)
+                            await process.search_movie(message, text, 0)
             
             else:
                 await app.send_message(message.chat.id, "Sorry you are blocked!")
