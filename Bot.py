@@ -161,7 +161,8 @@ async def cmd_parser(app, message):
 
         # 2. Upload Link Response
         # Check for upload response
-        if message.reply_to_message and "Please reply to this message with the direct download link" in message.reply_to_text:
+        # if message.reply_to_message and "Please reply to this message with the direct download link" in message.reply_to_text:
+        if message.reply_to_message and message.reply_to_message.text and "Please reply to this message with the direct download link" in message.reply_to_message.text:
              await process.handle_upload_response(message)
              return
 
