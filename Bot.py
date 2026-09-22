@@ -47,7 +47,7 @@ async def handle_callback(app, query):
         try:
             # Extract movie name using Regex for robustness
             # Matches "Request: <movie_name>" anywhere in the text
-            match = re.search(r"Request:\s*(.*)", query.text)
+            match = re.search(r"Request:\s*(.*)", query.message.text)
             if match:
                 movie_name = match.group(1).strip()
                 msg = f"The movie you searched for **{movie_name}**, is uploaded to the bot. You can retry now."
@@ -101,6 +101,8 @@ async def start_command(app, message):
 
 @app.on_message(filters.channel)
 async def admin_cmds_aprooval(app, message):
+    text = message.text or message.caption or ""
+    message.text = text
     if message.chat.id in Config.ADMIN and str(message.chat.id)[0] == "-":
         if f"{Config.CUSTOM_MSG_COMMAND}" in text:
             await process.handle_custom_message(message)
@@ -108,6 +110,9 @@ async def admin_cmds_aprooval(app, message):
 
 @app.on_message(filters.group)
 async def group_command(app, message):
+    text = message.text or message.caption or ""
+    message.text = text
+    
     if Config.ALWAYS_LISTEN_COMMAND in text:
         await process.handle_always_listen_command(message)
         return
@@ -119,13 +124,13 @@ async def group_command(app, message):
 
     if should_process and await process.dbh.check_user(message):
         user_id = message.from_user.id
-        text = str(text).replace(f"{Config.BOT_USERNAME}", "").strip()
-        await log.log(user_id, f"User searched inside the group.\nSearched: {text}")
+        search_text = str(text).replace(f"{Config.BOT_USERNAME}", "").strip()
+        await log.log(user_id, f"User searched inside the group.\nSearched: {search_text}")
 
         if "&" in text:
             await process.multi_search_movie(message, text, 0, 0)
         else:
-            await process.search_movie(message, text, 0)
+            await process.search_movie(message, search_text, 0)
     
     if message.chat.id in Config.ADMIN and str(message.chat.id)[0] == "-":
         if f"{Config.CUSTOM_MSG_COMMAND}" in text:
@@ -148,25 +153,23 @@ async def start_command(app, message):
 async def handle_chat_member_update(app, update):
     await process.handle_new_channel(update)
 
+
 text = ""
 
 @app.on_message((filters.text | filters.document | filters.video | filters.audio) & filters.private)
-
 async def cmd_parser(app, message):
     global text
     try:
         text = message.text or message.caption or ""
-        # text = message.text or message.caption or ""
+        message.text = text
         # 1. Media Upload (Implicit) - Beta
         # Handle files sent directly (forwarded or new) in background
-        message.text = text
         if message.document or message.video or message.audio:
             asyncio.create_task(process.handle_file_upload(message))
             return
 
         # 2. Upload Link Response
         # Check for upload response
-        # if message.reply_to_message and "Please reply to this message with the direct download link" in message.reply_to_text:
         if message.reply_to_message and message.reply_to_message.text and "Please reply to this message with the direct download link" in message.reply_to_message.text:
              await process.handle_upload_response(message)
              return
@@ -178,7 +181,7 @@ async def cmd_parser(app, message):
             if message.reply_to_message and text == Config.BROADCAST_COMMAND:
                 await process.send_promo_message(message)
             
-            elif text in Config.BROADCAST_COMMAND:
+            elif Config.BROADCAST_COMMAND in text:
                 await app.send_message(message.chat.id, f"Reply to any message with `{Config.BROADCAST_COMMAND}` and it will broadcast for all users.\n \n**If you need to broadcast a simple message, then just add `###` symbols (3 hashes) to any text message**")
             
             elif Config.BROADCAST_SYMBOL in text:
