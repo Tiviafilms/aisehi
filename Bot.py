@@ -148,15 +148,18 @@ async def start_command(app, message):
 async def handle_chat_member_update(app, update):
     await process.handle_new_channel(update)
 
+text = ""
 
 @app.on_message((filters.text | filters.document | filters.video | filters.audio) & filters.private)
 
 async def cmd_parser(app, message):
+    global text
     try:
         text = message.text or message.caption or ""
         # text = message.text or message.caption or ""
         # 1. Media Upload (Implicit) - Beta
         # Handle files sent directly (forwarded or new) in background
+        message.text = text
         if message.document or message.video or message.audio:
             asyncio.create_task(process.handle_file_upload(message))
             return
