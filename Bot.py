@@ -151,9 +151,10 @@ async def handle_chat_member_update(app, update):
 
 @app.on_message((filters.text | filters.document | filters.video | filters.audio) & filters.private)
 
+text = message.text or message.caption or ""
 async def cmd_parser(app, message):
     try:
-        text = message.text or message.caption or ""
+        # text = message.text or message.caption or ""
         # 1. Media Upload (Implicit) - Beta
         # Handle files sent directly (forwarded or new) in background
         if message.document or message.video or message.audio:
